@@ -16,7 +16,7 @@ export default function DifyChatbot() {
 
     // 加载 DifyChatbot 脚本
     const script = document.createElement('script');
-    script.src = `${siteConfig('DIFY_CHATBOT_BASE_URL')}/embed.min.js`; // 注意调用 siteConfig()
+    script.src = `${siteConfig('DIFY_CHATBOT_BASE_URL')}/embed.min.js?v=${new Date().getTime()}`; // 注意调用 siteConfig()
     script.id = siteConfig('DIFY_CHATBOT_TOKEN'); // 注意调用 siteConfig()
     script.defer = true;
     document.body.appendChild(script);
