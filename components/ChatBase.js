@@ -1,27 +1,24 @@
-import { siteConfig } from '@/lib/config'
+import { siteConfig } from '@/lib/config';
 
-/**
- * 这是一个嵌入组件，可以在任意位置全屏显示您的chat-base对话框
- * 暂时没有页面引用
- * 因为您可以直接用内嵌网页的方式放入您的notion中 https://www.chatbase.co/chatbot-iframe/${siteConfig('CHATBASE_ID')}
- */
 export default function ChatBase() {
   if (!siteConfig('CHATBASE_ID')) {
-    return <></>
+    return <></>;
   }
 
-   return (
+  const baseUrl = `${siteConfig('CHATBASE_ID')}`;
+
+  return (
     <div>
       <script>
         {`
           window.difyChatbotConfig = {
             token: 'tpn8UiMlmLEnZq2x',
-            baseUrl: siteConfig('CHATBASE_ID')
+            baseUrl: '${baseUrl}'
           }
         `}
       </script>
       <script
-        src="${siteConfig('CHATBASE_ID')}/embed.min.js"
+        src="${baseUrl}/embed.min.js"
         id="tpn8UiMlmLEnZq2x"
         defer
       ></script>
