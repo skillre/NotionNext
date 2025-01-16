@@ -16,12 +16,12 @@ export default function ChatBase() {
         {`
           window.difyChatbotConfig = {
             token: 'tpn8UiMlmLEnZq2x',
-            baseUrl: 'https://sknote.skillre.online:44335'
+            baseUrl: siteConfig('CHATBASE_ID')
           }
         `}
       </script>
       <script
-        src="https://sknote.skillre.online:44335/embed.min.js"
+        src="${siteConfig('CHATBASE_ID')}/embed.min.js"
         id="tpn8UiMlmLEnZq2x"
         defer
       ></script>
