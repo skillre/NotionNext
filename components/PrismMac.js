@@ -219,11 +219,24 @@ const renderMermaid = async (mermaidCDN) => {
  * (第二个对应 css 注释写法, 这里无法正常打出, notion 代码块中正常使用左斜杠 / 即可)
  * (空格不能少)
  * 则自动替换，将内容替换为实际代码执行
+ * 
+ * HTML代码块使用说明:
+ * 1. 基本使用: 以 <!-- custom --> 开头，直接插入HTML到页面中
+ * 2. 隔离模式: 以 <!-- custom --> <!-- isolated --> 开头，使用iframe隔离HTML内容
+ * 
+ * CSS代码块使用说明:
+ * 1. 基本使用: 以 CSS注释+custom 开头，CSS会被添加作用域限制
+ * 2. 外部链接: 以 CSS注释+custom-link 开头，每行一个CSS外部链接
+ * 
+ * JS代码块使用说明:
+ * 1. 基本使用: 以 // custom 开头，JS在沙箱环境中执行
+ * 2. 外部链接: 以 // custom-link 开头，导入外部JS脚本
  */
 const containsCustomCodeBlock = (block) => {
   const textContent = block.textContent || '';
   return (
     textContent.includes('<!-- custom -->') ||
+    textContent.includes('<!-- isolated -->') ||
     textContent.includes('/* custom */') ||
     textContent.includes('/* custom-link */') ||
     textContent.includes('// custom')
@@ -240,6 +253,8 @@ const renderCustomCode = () => {
     }
     
     const codeElements = toolbarEl.querySelectorAll('code');
+    let isProcessed = false;
+    
     codeElements.forEach(codeElement => {
       const language = codeElement.className.replace('language-', '');
       const firstChild = codeElement.firstChild;
@@ -260,33 +275,87 @@ const renderCustomCode = () => {
         if (isCustomLink || isCustom) {
           // 标记已处理
           toolbarEl.setAttribute('data-custom-processed', 'true');
+          isProcessed = true;
           
-          // 移除 custom 注释
-          originalCode = originalCode.replace(/(\/\/ custom-link)|(\/\* custom-link \*\/)|(<!-- custom -->)|(\/\* custom \*\/)|(\/\/ custom)/, '').trim();
-
+          // 移除 custom 注释，但保留 isolated 注释供后续处理
+          originalCode = originalCode
+            .replace(/(\/\/ custom-link)|(\/\* custom-link \*\/)|(<!-- custom -->)|(\/\* custom \*\/)|(\/\/ custom)/, '')
+            .trim();
+          
           switch (language) {
             case 'html': {
               const htmlContainer = document.createElement('div');
               htmlContainer.className = 'custom-html-container';
               htmlContainer.style.cssText = 'width: 100%; border: none; margin: 10px 0;';
               
-              // 使用iframe隔离HTML内容
-              const iframe = document.createElement('iframe');
-              iframe.style.cssText = 'width: 100%; border: none; background: transparent;';
-              iframe.onload = () => {
-                if (iframe.contentDocument) {
-                  iframe.contentDocument.body.innerHTML = originalCode;
-                  // 调整iframe高度以适应内容
-                  iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px';
-                  // 监听iframe内容变化动态调整高度
-                  const resizeObserver = new ResizeObserver(() => {
-                    iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px';
-                  });
-                  resizeObserver.observe(iframe.contentDocument.body);
-                }
-              };
+              // 检查第一行是否有特殊注释来决定是否使用隔离模式
+              const useIsolation = originalCode.includes('<!-- isolated -->');
               
-              htmlContainer.appendChild(iframe);
+              if (useIsolation) {
+                // 隔离模式：使用iframe
+                const iframe = document.createElement('iframe');
+                iframe.style.cssText = 'width: 100%; border: none; background: transparent; min-height: 100px;';
+                
+                // 添加基本样式和CDN资源
+                const htmlWithResources = `
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                      body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+                    </style>
+                  </head>
+                  <body>
+                    ${originalCode}
+                    <script>
+                      // 向父窗口发送高度信息
+                      function updateHeight() {
+                        const height = document.body.scrollHeight;
+                        window.parent.postMessage({ type: 'resize', height: height }, '*');
+                      }
+                      // 页面加载后和图片加载后都要更新高度
+                      window.addEventListener('load', updateHeight);
+                      window.addEventListener('resize', updateHeight);
+                      
+                      // 监听所有图片加载
+                      document.querySelectorAll('img').forEach(img => {
+                        if (img.complete) {
+                          updateHeight();
+                        } else {
+                          img.addEventListener('load', updateHeight);
+                        }
+                      });
+                      
+                      // 立即发送一次高度信息
+                      updateHeight();
+                    </script>
+                  </body>
+                  </html>
+                `;
+                
+                iframe.srcdoc = htmlWithResources;
+                
+                // 监听来自iframe的消息
+                window.addEventListener('message', function(e) {
+                  if (e.data && e.data.type === 'resize') {
+                    const iframes = document.querySelectorAll('iframe');
+                    for (const frame of iframes) {
+                      if (frame.contentWindow === e.source) {
+                        frame.style.height = (e.data.height + 20) + 'px';
+                        break;
+                      }
+                    }
+                  }
+                });
+                
+                htmlContainer.appendChild(iframe);
+              } else {
+                // 非隔离模式：直接插入DOM（原始行为）
+                htmlContainer.innerHTML = originalCode;
+              }
+              
               toolbarParent.insertBefore(htmlContainer, toolbarEl);
               break;
             }
@@ -374,6 +443,11 @@ const renderCustomCode = () => {
         }
       }
     });
+    
+    // 如果未处理，也要标记为已处理，避免重复检查
+    if (!isProcessed) {
+      toolbarEl.setAttribute('data-custom-processed', 'true');
+    }
   });
 };
 
