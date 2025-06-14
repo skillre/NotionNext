@@ -16,6 +16,31 @@ const Style = () => {
         color: white;
       }
 
+      // 文章内容页样式优化
+      #notion-article {
+        color: #333;
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      #notion-article .notion-page-content {
+        padding: 0.5rem 1rem;
+      }
+
+      // 文章内容链接样式
+      #notion-article .notion-link {
+        opacity: 0.85;
+        color: #4263eb;
+        transition: all 0.2s ease;
+      }
+
+      #notion-article .notion-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
       ::-webkit-scrollbar-thumb {
         background: rgba(60, 60, 67, 0.4);
         border-radius: 8px;
