@@ -33,6 +33,7 @@ module.exports = {
   // HTML 代码渲染功能
   HTML_RENDER_ENABLE: process.env.NEXT_PUBLIC_HTML_RENDER_ENABLE || true, // 是否启用HTML代码渲染功能
   HTML_RENDER_SANDBOX: process.env.NEXT_PUBLIC_HTML_RENDER_SANDBOX || true, // HTML渲染是否使用沙盒模式（推荐开启以保证安全性）
+  HTML_RENDER_HIDE_CODE: process.env.NEXT_PUBLIC_HTML_RENDER_HIDE_CODE || true, // 是否默认隐藏已渲染的HTML原始代码
 
   // END********代码相关********
 }

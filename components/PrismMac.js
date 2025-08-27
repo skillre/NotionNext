@@ -41,6 +41,7 @@ const PrismMac = () => {
   // HTML渲染相关配置
   const htmlRenderEnable = siteConfig('HTML_RENDER_ENABLE')
   const htmlRenderSandbox = siteConfig('HTML_RENDER_SANDBOX')
+  const htmlRenderHideCode = siteConfig('HTML_RENDER_HIDE_CODE')
 
   useEffect(() => {
     if (codeMacBar) {
@@ -71,7 +72,7 @@ const PrismMac = () => {
       renderCollapseCode(codeCollapse, codeCollapseExpandDefault)
       // 渲染HTML代码
       if (htmlRenderEnable) {
-        renderHtmlCode(htmlRenderSandbox)
+        renderHtmlCode(htmlRenderSandbox, htmlRenderHideCode)
       }
     })
   }, [router, isDarkMode])
@@ -287,8 +288,9 @@ const fixCodeLineStyle = () => {
 /**
  * 渲染HTML代码块
  * @param {boolean} useSandbox 是否使用沙监模式
+ * @param {boolean} hideCode 是否默认隐藏原始代码
  */
-const renderHtmlCode = (useSandbox = true) => {
+const renderHtmlCode = (useSandbox = true, hideCode = true) => {
   const container = document?.getElementById('notion-article')
   if (!container) return
 
@@ -325,6 +327,11 @@ const renderHtmlCode = (useSandbox = true) => {
       return
     }
     
+    // 根据配置决定是否隐藏原始代码
+    if (hideCode) {
+      parentElement.style.display = 'none'
+    }
+    
     // 创建渲染容器
     const renderContainer = document.createElement('div')
     renderContainer.className = 'html-render-container'
@@ -332,7 +339,26 @@ const renderHtmlCode = (useSandbox = true) => {
     // 创建标题栏
     const titleBar = document.createElement('div')
     titleBar.className = 'title-bar'
-    titleBar.innerHTML = '🔍 HTML 渲染预览'
+    
+    // 创建标题和切换按钮
+    const titleContent = document.createElement('span')
+    titleContent.innerHTML = '🔍 HTML 渲染预览'
+    
+    const toggleButton = document.createElement('button')
+    toggleButton.className = 'toggle-code-btn'
+    toggleButton.innerHTML = '📝 查看代码'
+    toggleButton.style.cssText = `
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    `
+    
+    titleBar.appendChild(titleContent)
+    titleBar.appendChild(toggleButton)
     renderContainer.appendChild(titleBar)
     
     if (useSandbox) {
@@ -444,6 +470,35 @@ const renderHtmlCode = (useSandbox = true) => {
     
     // 将渲染容器插入到代码块后面
     parentElement.parentNode.insertBefore(renderContainer, parentElement.nextSibling)
+    
+    // 添加切换功能
+    let isCodeVisible = !hideCode
+    
+    // 设置初始按钮状态
+    if (isCodeVisible) {
+      toggleButton.innerHTML = '🙈 隐藏代码'
+      toggleButton.style.background = 'rgba(255, 107, 107, 0.2)'
+      toggleButton.style.borderColor = 'rgba(255, 107, 107, 0.3)'
+    } else {
+      toggleButton.innerHTML = '📝 查看代码'
+      toggleButton.style.background = 'rgba(255, 255, 255, 0.2)'
+      toggleButton.style.borderColor = 'rgba(255, 255, 255, 0.3)'
+    }
+    
+    toggleButton.addEventListener('click', () => {
+      isCodeVisible = !isCodeVisible
+      if (isCodeVisible) {
+        parentElement.style.display = 'block'
+        toggleButton.innerHTML = '🙈 隐藏代码'
+        toggleButton.style.background = 'rgba(255, 107, 107, 0.2)'
+        toggleButton.style.borderColor = 'rgba(255, 107, 107, 0.3)'
+      } else {
+        parentElement.style.display = 'none'
+        toggleButton.innerHTML = '📝 查看代码'
+        toggleButton.style.background = 'rgba(255, 255, 255, 0.2)'
+        toggleButton.style.borderColor = 'rgba(255, 255, 255, 0.3)'
+      }
+    })
   })
 }
 
