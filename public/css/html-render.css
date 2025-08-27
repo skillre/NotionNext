@@ -20,7 +20,6 @@
   color: #495057;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 
@@ -28,34 +27,6 @@
   background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
   border-bottom-color: #4a5568;
   color: #e2e8f0;
-}
-
-/* 切换按钮样式 */
-.toggle-code-btn {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 4px !important;
-  padding: 4px 8px !important;
-  font-size: 12px !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  color: inherit !important;
-}
-
-.toggle-code-btn:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
-  transform: translateY(-1px);
-}
-
-.dark .toggle-code-btn {
-  background: rgba(0, 0, 0, 0.2) !important;
-  border-color: rgba(0, 0, 0, 0.3) !important;
-}
-
-.dark .toggle-code-btn:hover {
-  background: rgba(0, 0, 0, 0.3) !important;
-  border-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 /* iframe 样式 */

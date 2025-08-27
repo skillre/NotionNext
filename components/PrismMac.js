@@ -339,26 +339,7 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
     // 创建标题栏
     const titleBar = document.createElement('div')
     titleBar.className = 'title-bar'
-    
-    // 创建标题和切换按钮
-    const titleContent = document.createElement('span')
-    titleContent.innerHTML = '🔍 HTML 渲染预览'
-    
-    const toggleButton = document.createElement('button')
-    toggleButton.className = 'toggle-code-btn'
-    toggleButton.innerHTML = '📝 查看代码'
-    toggleButton.style.cssText = `
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    `
-    
-    titleBar.appendChild(titleContent)
-    titleBar.appendChild(toggleButton)
+    titleBar.innerHTML = '🔍 HTML 渲染预览'
     renderContainer.appendChild(titleBar)
     
     if (useSandbox) {
@@ -470,35 +451,6 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
     
     // 将渲染容器插入到代码块后面
     parentElement.parentNode.insertBefore(renderContainer, parentElement.nextSibling)
-    
-    // 添加切换功能
-    let isCodeVisible = !hideCode
-    
-    // 设置初始按钮状态
-    if (isCodeVisible) {
-      toggleButton.innerHTML = '🙈 隐藏代码'
-      toggleButton.style.background = 'rgba(255, 107, 107, 0.2)'
-      toggleButton.style.borderColor = 'rgba(255, 107, 107, 0.3)'
-    } else {
-      toggleButton.innerHTML = '📝 查看代码'
-      toggleButton.style.background = 'rgba(255, 255, 255, 0.2)'
-      toggleButton.style.borderColor = 'rgba(255, 255, 255, 0.3)'
-    }
-    
-    toggleButton.addEventListener('click', () => {
-      isCodeVisible = !isCodeVisible
-      if (isCodeVisible) {
-        parentElement.style.display = 'block'
-        toggleButton.innerHTML = '🙈 隐藏代码'
-        toggleButton.style.background = 'rgba(255, 107, 107, 0.2)'
-        toggleButton.style.borderColor = 'rgba(255, 107, 107, 0.3)'
-      } else {
-        parentElement.style.display = 'none'
-        toggleButton.innerHTML = '📝 查看代码'
-        toggleButton.style.background = 'rgba(255, 255, 255, 0.2)'
-        toggleButton.style.borderColor = 'rgba(255, 255, 255, 0.3)'
-      }
-    })
   })
 }
 
