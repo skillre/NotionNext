@@ -28,7 +28,11 @@ module.exports = {
   // Mermaid 图表CDN
   MERMAID_CDN:
     process.env.NEXT_PUBLIC_MERMAID_CDN ||
-    'https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.0/mermaid.min.js' // CDN
+    'https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.0/mermaid.min.js', // CDN
+
+  // HTML 代码渲染功能
+  HTML_RENDER_ENABLE: process.env.NEXT_PUBLIC_HTML_RENDER_ENABLE || true, // 是否启用HTML代码渲染功能
+  HTML_RENDER_SANDBOX: process.env.NEXT_PUBLIC_HTML_RENDER_SANDBOX || true, // HTML渲染是否使用沙盒模式（推荐开启以保证安全性）
 
   // END********代码相关********
 }

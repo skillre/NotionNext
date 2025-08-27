@@ -1,0 +1,149 @@
+/* HTML 渲染容器样式 */
+.html-render-container {
+  margin: 16px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.html-render-container:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 标题栏样式 */
+.html-render-container .title-bar {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark .html-render-container .title-bar {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  border-bottom-color: #4a5568;
+  color: #e2e8f0;
+}
+
+/* iframe 样式 */
+.html-render-container iframe {
+  width: 100%;
+  min-height: 200px;
+  border: none;
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+
+.dark .html-render-container iframe {
+  background: #1a202c;
+}
+
+/* 直接渲染模式样式 */
+.html-render-container .direct-render {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 0 0 8px 8px;
+  min-height: 100px;
+}
+
+.dark .html-render-container .direct-render {
+  background: #1a202c;
+  color: #e2e8f0;
+}
+
+/* 错误状态样式 */
+.html-render-error {
+  padding: 20px;
+  text-align: center;
+  color: #e74c3c;
+  background: #ffeaa7;
+  border-radius: 0 0 8px 8px;
+}
+
+.dark .html-render-error {
+  background: #2d1b1b;
+  color: #f56565;
+}
+
+/* 加载状态 */
+.html-render-loading {
+  padding: 40px;
+  text-align: center;
+  color: #6c757d;
+  background: #f8f9fa;
+  border-radius: 0 0 8px 8px;
+}
+
+.dark .html-render-loading {
+  background: #2d3748;
+  color: #a0aec0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .html-render-container {
+    margin: 12px 0;
+    border-radius: 6px;
+  }
+  
+  .html-render-container .title-bar {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .html-render-container .direct-render {
+    padding: 12px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.html-render-container {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* 滚动条样式优化 */
+.html-render-container iframe::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.html-render-container iframe::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.html-render-container iframe::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.html-render-container iframe::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.dark .html-render-container iframe::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+.dark .html-render-container iframe::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+.dark .html-render-container iframe::-webkit-scrollbar-thumb:hover {
+  background: #606980;
+}

@@ -38,10 +38,20 @@ const PrismMac = () => {
   const codeCollapse = siteConfig('CODE_COLLAPSE')
   const codeCollapseExpandDefault = siteConfig('CODE_COLLAPSE_EXPAND_DEFAULT')
 
+  // HTML渲染相关配置
+  const htmlRenderEnable = siteConfig('HTML_RENDER_ENABLE')
+  const htmlRenderSandbox = siteConfig('HTML_RENDER_SANDBOX')
+
   useEffect(() => {
     if (codeMacBar) {
       loadExternalResource('/css/prism-mac-style.css', 'css')
     }
+    
+    // 加载HTML渲染样式
+    if (htmlRenderEnable) {
+      loadExternalResource('/css/html-render.css', 'css')
+    }
+    
     // 加载prism样式
     loadPrismThemeCSS(
       isDarkMode,
@@ -59,6 +69,10 @@ const PrismMac = () => {
       renderPrismMac(codeLineNumbers)
       renderMermaid(mermaidCDN)
       renderCollapseCode(codeCollapse, codeCollapseExpandDefault)
+      // 渲染HTML代码
+      if (htmlRenderEnable) {
+        renderHtmlCode(htmlRenderSandbox)
+      }
     })
   }, [router, isDarkMode])
 
@@ -268,6 +282,169 @@ const fixCodeLineStyle = () => {
       Prism.plugins.lineNumbers.resize(preCode)
     }
   }, 10)
+}
+
+/**
+ * 渲染HTML代码块
+ * @param {boolean} useSandbox 是否使用沙监模式
+ */
+const renderHtmlCode = (useSandbox = true) => {
+  const container = document?.getElementById('notion-article')
+  if (!container) return
+
+  // 查找所有HTML代码块
+  const htmlCodeBlocks = container.querySelectorAll('code.language-html')
+  
+  htmlCodeBlocks.forEach(codeElement => {
+    const codeContent = codeElement.textContent || ''
+    
+    // 检查是否包含渲染开关（在代码块的最前面）
+    const renderTrigger = '<!-- render:true -->'
+    const noRenderTrigger = '<!-- render:false -->'
+    
+    // 检查开关状态
+    let shouldRender = false
+    let cleanedCode = codeContent
+    
+    if (codeContent.trim().startsWith(renderTrigger)) {
+      shouldRender = true
+      cleanedCode = codeContent.replace(renderTrigger, '').trim()
+    } else if (codeContent.trim().startsWith(noRenderTrigger)) {
+      shouldRender = false
+      cleanedCode = codeContent.replace(noRenderTrigger, '').trim()
+    }
+    
+    // 如果不需要渲染，跳过
+    if (!shouldRender) {
+      return
+    }
+    
+    // 检查是否已经渲染过
+    const parentElement = codeElement.closest('.code-toolbar') || codeElement.closest('pre')
+    if (!parentElement || parentElement.querySelector('.html-render-container')) {
+      return
+    }
+    
+    // 创建渲染容器
+    const renderContainer = document.createElement('div')
+    renderContainer.className = 'html-render-container'
+    
+    // 创建标题栏
+    const titleBar = document.createElement('div')
+    titleBar.className = 'title-bar'
+    titleBar.innerHTML = '🔍 HTML 渲染预览'
+    renderContainer.appendChild(titleBar)
+    
+    if (useSandbox) {
+      // 使用iframe沙监模式（推荐）
+      const iframe = document.createElement('iframe')
+      iframe.className = 'html-render-iframe'
+      
+      // 设置沙监属性，防止恶意代码
+      iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals'
+      
+      renderContainer.appendChild(iframe)
+      
+      // 向iframe写入HTML内容
+      iframe.onload = () => {
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+          
+          // 创建独立的HTML文档
+          const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                /* 重置样式，避免外部样式干扰 */
+                * {
+                  box-sizing: border-box;
+                }
+                body {
+                  margin: 8px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                }
+                /* 防止内容溢出 */
+                html, body {
+                  overflow-x: auto;
+                  word-wrap: break-word;
+                }
+              </style>
+            </head>
+            <body>
+              ${cleanedCode}
+              <script>
+                // 监听内容高度变化，动态调整iframe高度
+                function adjustIframeHeight() {
+                  const height = Math.max(
+                    document.body.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.clientHeight,
+                    document.documentElement.scrollHeight,
+                    document.documentElement.offsetHeight
+                  );
+                  window.parent.postMessage({
+                    type: 'resize',
+                    height: height + 20
+                  }, '*');
+                }
+                
+                // 初始调整
+                setTimeout(adjustIframeHeight, 100);
+                
+                // 监听窗口大小变化
+                window.addEventListener('resize', adjustIframeHeight);
+                
+                // 监听DOM变化
+                const observer = new MutationObserver(adjustIframeHeight);
+                observer.observe(document.body, {
+                  childList: true,
+                  subtree: true,
+                  attributes: true
+                });
+              </script>
+            </body>
+            </html>
+          `
+          
+          iframeDoc.open()
+          iframeDoc.write(htmlContent)
+          iframeDoc.close()
+          
+        } catch (error) {
+          console.error('HTML渲染错误:', error)
+          const errorContainer = document.createElement('div')
+          errorContainer.className = 'html-render-error'
+          errorContainer.innerHTML = `
+            <strong>渲染错误</strong><br>
+            <small>请检查HTML代码是否正确</small>
+          `
+          iframe.replaceWith(errorContainer)
+        }
+      }
+      
+      // 监听ifram高度调整消息
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'resize') {
+          iframe.style.height = event.data.height + 'px'
+        }
+      })
+      
+    } else {
+      // 直接渲染模式（不推荐，可能影响页面样式）
+      const directRenderContainer = document.createElement('div')
+      directRenderContainer.className = 'direct-render'
+      directRenderContainer.innerHTML = cleanedCode
+      renderContainer.appendChild(directRenderContainer)
+    }
+    
+    // 将渲染容器插入到代码块后面
+    parentElement.parentNode.insertBefore(renderContainer, parentElement.nextSibling)
+  })
 }
 
 export default PrismMac
