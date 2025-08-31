@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首次加载HTML渲染测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-html {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+            font-size: 14px;
+        }
+        .expected-result {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin-top: 10px;
+        }
+        .improvement-summary {
+            background: #e1f5fe;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin-bottom: 20px;
+        }
+        .test-instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 首次加载HTML渲染优化测试</h1>
+        
+        <div class="improvement-summary">
+            <h3>🎯 本次优化重点：</h3>
+            <p><strong>问题：</strong>首次打开页面时HTML渲染窗口显示很小，刷新后才正常显示。</p>
+            <p><strong>解决方案：</strong></p>
+            <ul>
+                <li><strong>多重初始化机制</strong>：在不同时机进行多次高度计算</li>
+                <li><strong>更合理的初始高度</strong>：iframe初始高度设为400px而不是200px</li>
+                <li><strong>强制布局重排</strong>：使用requestAnimationFrame和offsetHeight强制重新计算</li>
+                <li><strong>首次计算优化</strong>：首次计算无过渡动画，立即显示正确高度</li>
+                <li><strong>增加计算次数</strong>：从3次增加到8次，确保有足够机会获得正确结果</li>
+            </ul>
+        </div>
+
+        <div class="test-instructions">
+            <h3>📋 测试步骤：</h3>
+            <ol>
+                <li><strong>关键测试</strong>：在新的浏览器标签页中打开此页面（模拟首次访问）</li>
+                <li><strong>观察初始显示</strong>：注意HTML渲染窗口的初始大小是否合理</li>
+                <li><strong>检查控制台</strong>：观看高度计算的日志信息</li>
+                <li><strong>不要刷新</strong>：应该在首次加载时就显示正确的高度</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>测试1：短内容首次加载</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;"&gt;
+    &lt;h3&gt;首次加载测试&lt;/h3&gt;
+    &lt;p&gt;这个内容应该在首次打开页面时就显示正确的高度！&lt;/p&gt;
+    &lt;p&gt;如果你看到这个窗口的高度是合适的，说明优化成功。&lt;/p&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>期望结果：</strong>首次打开页面时就应该显示合适的高度，不需要刷新页面
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试2：中等内容首次加载</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="padding: 20px; border: 2px solid #e74c3c; border-radius: 10px; font-family: Arial, sans-serif;"&gt;
+    &lt;h2 style="color: #e74c3c; margin-top: 0;"&gt;中等长度内容测试&lt;/h2&gt;
+    &lt;p&gt;这是一个包含更多内容的测试案例，用来验证首次加载时的高度计算是否准确。&lt;/p&gt;
+    
+    &lt;h3&gt;优化内容说明&lt;/h3&gt;
+    &lt;ul&gt;
+        &lt;li&gt;多重初始化：10ms、100ms、300ms、600ms多个时机计算&lt;/li&gt;
+        &lt;li&gt;强制重排：使用offsetHeight强制浏览器重新计算布局&lt;/li&gt;
+        &lt;li&gt;requestAnimationFrame：等待浏览器下一帧再计算&lt;/li&gt;
+        &lt;li&gt;初始高度：设置400px合理的起始高度&lt;/li&gt;
+    &lt;/ul&gt;
+    
+    &lt;h3&gt;测试要点&lt;/h3&gt;
+    &lt;p&gt;✅ 首次打开页面就应该看到正确的高度&lt;/p&gt;
+    &lt;p&gt;✅ 不需要刷新页面&lt;/p&gt;
+    &lt;p&gt;✅ 控制台显示多次计算日志&lt;/p&gt;
+    &lt;p&gt;✅ 首次计算标记为isFirstCalculation: true&lt;/p&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>期望结果：</strong>中等长度的内容也应该在首次加载时就正确显示，窗口高度适合内容
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试3：较长内容首次加载（关键测试）</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="padding: 25px; border: 3px solid #f39c12; border-radius: 12px; background: #fdf6e3;"&gt;
+    &lt;h1 style="color: #f39c12; text-align: center; margin-top: 0;"&gt;🎯 首次加载长内容测试&lt;/h1&gt;
+    
+    &lt;div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 15px; border-radius: 8px; margin: 15px 0;"&gt;
+        &lt;h2&gt;这是最重要的测试！&lt;/h2&gt;
+        &lt;p&gt;如果这个较长的内容在首次加载时就能完整显示，说明我们的优化完全成功了。&lt;/p&gt;
+    &lt;/div&gt;
+    
+    &lt;h2&gt;优化机制详解&lt;/h2&gt;
+    
+    &lt;h3&gt;1. 多时机初始化&lt;/h3&gt;
+    &lt;p&gt;我们在以下多个时机进行高度计算：&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li&gt;&lt;strong&gt;立即计算&lt;/strong&gt; (10ms)：尽快获得一个初始高度&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;DOM准备后&lt;/strong&gt; (100ms)：等待DOM内容稳定&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;样式应用后&lt;/strong&gt; (300ms)：等待CSS样式完全生效&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;最终确认&lt;/strong&gt; (600ms)：进行最终的高度确认&lt;/li&gt;
+    &lt;/ul&gt;
+    
+    &lt;h3&gt;2. 强制布局重排&lt;/h3&gt;
+    &lt;p&gt;通过访问offsetHeight属性强制浏览器重新计算布局，确保获得准确的高度值。&lt;/p&gt;
+    
+    &lt;h3&gt;3. requestAnimationFrame优化&lt;/h3&gt;
+    &lt;p&gt;使用requestAnimationFrame确保在浏览器下一次重绘时计算高度，提高准确性。&lt;/p&gt;
+    
+    &lt;h3&gt;4. 智能边距计算&lt;/h3&gt;
+    &lt;p&gt;添加30px的边距确保内容不会被截断，同时不会过度增加高度。&lt;/p&gt;
+    
+    &lt;h3&gt;5. 首次计算特殊处理&lt;/h3&gt;
+    &lt;p&gt;对于首次计算结果，立即应用高度变化（无动画），确保用户看到正确的初始大小。&lt;/p&gt;
+    
+    &lt;div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #27ae60;"&gt;
+        &lt;h3 style="color: #27ae60; margin-top: 0;"&gt;✅ 成功指标&lt;/h3&gt;
+        &lt;p&gt;如果你能在首次打开页面时就看到这整个绿色区域，说明优化完全成功！&lt;/p&gt;
+        &lt;p&gt;这意味着：&lt;/p&gt;
+        &lt;ul&gt;
+            &lt;li&gt;iframe高度计算正确&lt;/li&gt;
+            &lt;li&gt;多重初始化机制有效&lt;/li&gt;
+            &lt;li&gt;不再需要刷新页面&lt;/li&gt;
+            &lt;li&gt;用户体验得到显著改善&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    
+    &lt;h3&gt;调试信息&lt;/h3&gt;
+    &lt;p&gt;请查看浏览器控制台，应该能看到以下日志：&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li&gt;"HTML渲染: 立即计算高度 (首次尝试)"&lt;/li&gt;
+        &lt;li&gt;"HTML渲染: DOM内容准备后计算"&lt;/li&gt;
+        &lt;li&gt;"HTML渲染高度计算 (精确模式)" - isFirstCalculation: true&lt;/li&gt;
+        &lt;li&gt;"HTML渲染: 调整iframe高度 (完整显示模式)" - isFirstCalculation: true&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>期望结果：</strong>这是关键测试！较长的内容应该在首次加载时就完整显示，证明优化成功
+            </div>
+        </div>
+
+        <div style="margin-top: 50px; padding: 20px; background: #f0f8f0; border-radius: 8px; text-align: center;">
+            <h2>🎉 测试完成</h2>
+            <p><strong>如果上面所有的HTML内容都能在首次打开页面时正确显示高度，恭喜！优化成功！</strong></p>
+            <p>现在用户不再需要刷新页面就能看到正确大小的HTML渲染窗口了。</p>
+            <p>页面加载时间：<span id="loadTime"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 记录页面加载时间
+        const startTime = performance.now();
+        
+        window.addEventListener('load', () => {
+            const loadTime = (performance.now() - startTime).toFixed(2);
+            document.getElementById('loadTime').textContent = loadTime + 'ms';
+            
+            console.log('🎯 首次加载测试页面已完成加载');
+            console.log('加载时间:', loadTime + 'ms');
+            
+            // 监控iframe高度变化
+            setTimeout(() => {
+                const iframes = document.querySelectorAll('iframe.html-render-iframe');
+                iframes.forEach((iframe, index) => {
+                    console.log(`iframe ${index + 1} 当前高度:`, iframe.style.height);
+                });
+                
+                if (iframes.length === 0) {
+                    console.log('⚠️ 未找到HTML渲染iframe，可能渲染功能未启用');
+                } else {
+                    console.log('✅ 找到', iframes.length, '个HTML渲染iframe');
+                }
+            }, 2000);
+        });
+        
+        // 监听iframe高度调整消息
+        let heightAdjustmentCount = 0;
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'htmlRenderAccurateResize') {
+                heightAdjustmentCount++;
+                console.log(`📏 第${heightAdjustmentCount}次高度调整:`, {
+                    height: event.data.height + 'px',
+                    isFirstCalculation: event.data.isFirstCalculation,
+                    calculationAttempt: event.data.calculationAttempt,
+                    timestamp: new Date(event.data.timestamp).toLocaleTimeString()
+                });
+                
+                if (event.data.isFirstCalculation) {
+                    console.log('🎉 首次计算完成！高度应该立即更新为:', event.data.height + 'px');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

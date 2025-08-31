@@ -351,6 +351,9 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
       const iframe = document.createElement('iframe')
       iframe.className = 'html-render-iframe'
       
+      // 设置初始高度，避免首次加载时显示过小
+      iframe.style.height = '400px' // 设置一个合理的初始高度
+      
       // 设置沙监属性，防止恶意代码
       iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals'
       
@@ -376,7 +379,7 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
                 // 精确的高度计算机制，确保内容完整展示
                 let isCalculating = false;
                 let calculationAttempts = 0;
-                const MAX_CALCULATION_ATTEMPTS = 3; // 减少计算次数，更加精确
+                const MAX_CALCULATION_ATTEMPTS = 8; // 增加计算次数，确保首次加载正确
                 let lastCalculatedHeight = 0;
                 
                 // 改进的高度计算函数，不再限制最大高度
@@ -389,56 +392,71 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
                   calculationAttempts++;
                   
                   try {
-                    // 等待DOM完全渲染
+                    // 更长的延迟确保DOM完全渲染
                     setTimeout(() => {
                       const body = document.body;
                       const html = document.documentElement;
                       
-                      // 强制浏览器重新计算布局
+                      // 多次强制重新计算布局，确保样式已应用
                       body.offsetHeight;
+                      html.offsetHeight;
                       
-                      // 获取实际内容高度
-                      const contentHeight = body.scrollHeight;
-                      
-                      // 优先使用body的scrollHeight，这通常最准确
-                      let finalHeight = contentHeight;
-                      
-                      // 如果内容高度似乎不合理，使用备用方法
-                      if (!finalHeight || finalHeight < 20) {
-                        finalHeight = Math.max(
-                          body.offsetHeight,
-                          body.clientHeight,
-                          50 // 最小高度
-                        );
-                      }
-                      
-                      // 添加少量边距以确保内容完整显示
-                      finalHeight += 20;
-                      
-                      // 只有当高度发生显著变化时才更新
-                      const heightDifference = Math.abs(finalHeight - lastCalculatedHeight);
-                      if (heightDifference > 10 || lastCalculatedHeight === 0) {
-                        lastCalculatedHeight = finalHeight;
+                      // 等待浏览器重新渲染
+                      requestAnimationFrame(() => {
+                        // 再次强制重新计算
+                        body.offsetHeight;
                         
-                        console.log('HTML渲染高度计算 (精确模式):', {
-                          contentHeight: contentHeight,
-                          finalHeight: finalHeight,
-                          calculationAttempts: calculationAttempts,
-                          heightDifference: heightDifference
-                        });
+                        // 获取实际内容高度
+                        const contentHeight = body.scrollHeight;
                         
-                        // 发送高度信息
-                        window.parent.postMessage({
-                          type: 'htmlRenderAccurateResize', // 新的消息类型
-                          height: finalHeight,
-                          iframeId: window.frameElement?.id || 'html-render',
-                          timestamp: Date.now(),
-                          calculationAttempt: calculationAttempts
-                        }, '*');
-                      }
-                      
-                      isCalculating = false;
-                    }, 50); // 短暂延迟确保DOM完成
+                        // 优先使用body的scrollHeight，这通常最准确
+                        let finalHeight = contentHeight;
+                        
+                        // 如果内容高度似乎不合理，使用备用方法
+                        if (!finalHeight || finalHeight < 20) {
+                          const alternativeHeights = [
+                            body.offsetHeight,
+                            body.clientHeight,
+                            html.scrollHeight,
+                            html.offsetHeight
+                          ].filter(h => h > 0);
+                          
+                          finalHeight = Math.max(...alternativeHeights, 50);
+                        }
+                        
+                        // 添加少量边距以确保内容完整显示
+                        finalHeight += 30;
+                        
+                        // 首次计算或高度变化较大时都要更新
+                        const heightDifference = Math.abs(finalHeight - lastCalculatedHeight);
+                        const shouldUpdate = lastCalculatedHeight === 0 || heightDifference > 5;
+                        
+                        if (shouldUpdate) {
+                          lastCalculatedHeight = finalHeight;
+                          
+                          console.log('HTML渲染高度计算 (精确模式):', {
+                            contentHeight: contentHeight,
+                            finalHeight: finalHeight,
+                            calculationAttempts: calculationAttempts,
+                            heightDifference: heightDifference,
+                            isFirstCalculation: lastCalculatedHeight === 0,
+                            timestamp: new Date().toLocaleTimeString()
+                          });
+                          
+                          // 发送高度信息
+                          window.parent.postMessage({
+                            type: 'htmlRenderAccurateResize',
+                            height: finalHeight,
+                            iframeId: window.frameElement?.id || 'html-render',
+                            timestamp: Date.now(),
+                            calculationAttempt: calculationAttempts,
+                            isFirstCalculation: calculationAttempts === 1
+                          }, '*');
+                        }
+                        
+                        isCalculating = false;
+                      });
+                    }, calculationAttempts === 1 ? 10 : 80); // 首次计算更短延迟
                     
                   } catch (error) {
                     console.error('HTML渲染高度计算错误:', error);
@@ -455,14 +473,60 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
                   }
                 }
                 
-                // 初始化高度计算
+                // 初始化高度计算 - 优化首次加载时机
                 function initializeHeightCalculation() {
-                  // 等待所有资源加载完成
+                  // 多重初始化机制，确保首次加载就能正确显示
+                  
+                  // 1. 立即进行一次计算（但可能不准确）
+                  setTimeout(() => {
+                    console.log('HTML渲染: 立即计算高度 (首次尝试)');
+                    calculateAccurateHeight();
+                  }, 10);
+                  
+                  // 2. DOM内容准备完成后再次计算
+                  setTimeout(() => {
+                    console.log('HTML渲染: DOM内容准备后计算');
+                    // 强制重新计算布局
+                    document.body.offsetHeight;
+                    isCalculating = false;
+                    calculationAttempts = 0; // 重置计算次数
+                    calculateAccurateHeight();
+                  }, 100);
+                  
+                  // 3. 等待样式完全应用后再次计算
+                  setTimeout(() => {
+                    console.log('HTML渲染: 样式应用后计算');
+                    // 再次强制重新计算布局
+                    document.documentElement.offsetHeight;
+                    isCalculating = false;
+                    calculationAttempts = 0;
+                    calculateAccurateHeight();
+                  }, 300);
+                  
+                  // 4. 最终确认计算
+                  setTimeout(() => {
+                    console.log('HTML渲染: 最终确认计算');
+                    isCalculating = false;
+                    calculationAttempts = 0;
+                    calculateAccurateHeight();
+                  }, 600);
+                  
+                  // 原有的加载完成监听
                   if (document.readyState === 'complete') {
-                    setTimeout(calculateAccurateHeight, 100);
+                    setTimeout(() => {
+                      console.log('HTML渲染: 文档已完成加载');
+                      isCalculating = false;
+                      calculationAttempts = 0;
+                      calculateAccurateHeight();
+                    }, 200);
                   } else {
                     window.addEventListener('load', () => {
-                      setTimeout(calculateAccurateHeight, 100);
+                      setTimeout(() => {
+                        console.log('HTML渲染: 窗口load事件触发');
+                        isCalculating = false;
+                        calculationAttempts = 0;
+                        calculateAccurateHeight();
+                      }, 200);
                     });
                   }
                   
@@ -479,14 +543,24 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
                         img.onload = img.onerror = () => {
                           loadedImages++;
                           if (loadedImages === totalImages) {
-                            setTimeout(calculateAccurateHeight, 100);
+                            setTimeout(() => {
+                              console.log('HTML渲染: 所有图片加载完成');
+                              isCalculating = false;
+                              calculationAttempts = 0;
+                              calculateAccurateHeight();
+                            }, 100);
                           }
                         };
                       }
                     });
                     
                     if (loadedImages === totalImages) {
-                      setTimeout(calculateAccurateHeight, 100);
+                      setTimeout(() => {
+                        console.log('HTML渲染: 图片已存在于缓存');
+                        isCalculating = false;
+                        calculationAttempts = 0;
+                        calculateAccurateHeight();
+                      }, 100);
                     }
                   }
                 }
@@ -592,17 +666,30 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
               oldHeight: targetIframe.style.height,
               newHeight: height + 'px',
               messageType: event.data.type,
+              isFirstCalculation: event.data.isFirstCalculation,
+              calculationAttempt: event.data.calculationAttempt,
               timestamp: event.data.timestamp
             });
             
-            // 平滑过渡高度变化
-            targetIframe.style.transition = 'height 0.3s ease';
-            targetIframe.style.height = height + 'px';
-            
-            // 移除过渡效果
-            setTimeout(() => {
-              targetIframe.style.transition = '';
-            }, 300);
+            // 对于首次计算，立即更新高度，无过渡动画
+            if (event.data.isFirstCalculation) {
+              targetIframe.style.transition = 'none';
+              targetIframe.style.height = height + 'px';
+              
+              // 稍后恢复过渡效果
+              setTimeout(() => {
+                targetIframe.style.transition = 'height 0.3s ease';
+              }, 100);
+            } else {
+              // 平滑过渡高度变化
+              targetIframe.style.transition = 'height 0.3s ease';
+              targetIframe.style.height = height + 'px';
+              
+              // 移除过渡效果
+              setTimeout(() => {
+                targetIframe.style.transition = '';
+              }, 300);
+            }
           }
         };
         
