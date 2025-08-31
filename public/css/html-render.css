@@ -33,9 +33,12 @@
 .html-render-container iframe {
   width: 100%;
   min-height: 200px;
+  max-height: 3000px; /* 添加最大高度限制，防止无限滚动 */
   border: none;
   background: white;
   border-radius: 0 0 8px 8px;
+  overflow: hidden; /* 防止内容溢出 */
+  transition: height 0.3s ease; /* 平滑的高度过渡 */
 }
 
 .dark .html-render-container iframe {
@@ -101,6 +104,7 @@
   
   .html-render-container iframe {
     min-height: 180px;
+    max-height: 2000px; /* 移动端更严格的高度限制 */
   }
 }
 
@@ -128,6 +132,7 @@
   
   .html-render-container iframe {
     min-height: 150px;
+    max-height: 1500px; /* 手机端更严格的高度限制 */
   }
 }
 
@@ -150,6 +155,7 @@
   
   .html-render-container iframe {
     min-height: 120px;
+    max-height: 1000px; /* 超小屏幕更严格的高度限制 */
   }
 }
 

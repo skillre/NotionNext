@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML渲染修复效果验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-html {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+        }
+        .expected-result {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin-top: 10px;
+        }
+        .footer-marker {
+            margin-top: 100px;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px dashed #ffc107;
+        }
+        .test-description {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 HTML渲染滚动问题修复验证</h1>
+        
+        <div class="test-description">
+            <h3>修复内容总结：</h3>
+            <ul>
+                <li><strong>高度计算优化</strong>：改用最小值计算，添加5000px上限</li>
+                <li><strong>调整次数限制</strong>：最多10次调整，防止无限循环</li>
+                <li><strong>消息机制改进</strong>：使用专用消息类型htmlRenderResize</li>
+                <li><strong>错误处理增强</strong>：添加详细日志和异常处理</li>
+                <li><strong>CSS限制</strong>：iframe最大高度3000px，移动端更严格</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>测试1：基础HTML渲染</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); padding: 20px; border-radius: 10px; color: white; text-align: center;"&gt;
+    &lt;h3&gt;基础渲染测试&lt;/h3&gt;
+    &lt;p&gt;这是一个基础的HTML渲染测试&lt;/p&gt;
+    &lt;button onclick="alert('点击成功!')"&gt;测试按钮&lt;/button&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>应该正常渲染，高度适中，不会导致页面无限滚动
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试2：较大内容HTML</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="padding: 20px; border: 2px solid #333; border-radius: 10px;"&gt;
+    &lt;h2&gt;较大内容测试&lt;/h2&gt;
+    &lt;p&gt;这是第一段内容&lt;/p&gt;
+    &lt;p&gt;这是第二段内容&lt;/p&gt;
+    &lt;p&gt;这是第三段内容&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li&gt;列表项1&lt;/li&gt;
+        &lt;li&gt;列表项2&lt;/li&gt;
+        &lt;li&gt;列表项3&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;table border="1" style="width:100%; border-collapse: collapse;"&gt;
+        &lt;tr&gt;&lt;th&gt;列1&lt;/th&gt;&lt;th&gt;列2&lt;/th&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;数据1&lt;/td&gt;&lt;td&gt;数据2&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;数据3&lt;/td&gt;&lt;td&gt;数据4&lt;/td&gt;&lt;/tr&gt;
+    &lt;/table&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>内容较多但高度受限，最大不超过3000px，页面可正常滚动到底部
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试3：不渲染的代码块</h2>
+            <div class="test-html"><!-- render:false -->
+&lt;div&gt;
+    &lt;p&gt;这个代码块不应该被渲染&lt;/p&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>代码块应该保持原样显示，不进行HTML渲染
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试4：移动端响应式测试</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="background: #f39c12; padding: 15px; border-radius: 8px; color: white;"&gt;
+    &lt;h3&gt;移动端测试&lt;/h3&gt;
+    &lt;p&gt;在移动设备上，iframe高度应该有更严格的限制：&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li&gt;平板(≤768px): 最大2000px&lt;/li&gt;
+        &lt;li&gt;手机(≤480px): 最大1500px&lt;/li&gt;
+        &lt;li&gt;超小屏(≤320px): 最大1000px&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>在不同屏幕尺寸下都有合适的高度限制
+            </div>
+        </div>
+
+        <div class="footer-marker">
+            <h2>🎯 页面底部标记</h2>
+            <p><strong>如果你能正常看到这个区域，说明修复成功！</strong></p>
+            <p>之前的无限滚动问题应该已经解决，页面现在可以正常滚动到真正的底部。</p>
+            <p>时间戳：<span id="timestamp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 显示时间戳
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // 监控页面滚动，检测是否还有异常滚动
+        let maxScrollTop = 0;
+        let scrollCheckCount = 0;
+        
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = document.documentElement.clientHeight;
+            
+            if (scrollTop > maxScrollTop) {
+                maxScrollTop = scrollTop;
+            }
+            
+            scrollCheckCount++;
+            
+            // 每100次滚动检查一次
+            if (scrollCheckCount % 100 === 0) {
+                const maxPossibleScroll = scrollHeight - clientHeight;
+                const scrollRatio = scrollTop / maxPossibleScroll;
+                
+                console.log('滚动检查:', {
+                    scrollTop: scrollTop,
+                    maxScrollTop: maxScrollTop,
+                    scrollHeight: scrollHeight,
+                    clientHeight: clientHeight,
+                    maxPossibleScroll: maxPossibleScroll,
+                    scrollRatio: (scrollRatio * 100).toFixed(2) + '%'
+                });
+                
+                // 如果滚动位置超过合理范围，发出警告
+                if (scrollTop > maxPossibleScroll + 50) {
+                    console.warn('⚠️ 检测到可能的异常滚动！');
+                }
+            }
+        });
+        
+        // 页面加载完成后检查总高度
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const totalHeight = document.documentElement.scrollHeight;
+                console.log('页面总高度:', totalHeight + 'px');
+                
+                if (totalHeight > 10000) {
+                    console.warn('⚠️ 页面高度异常：' + totalHeight + 'px');
+                } else {
+                    console.log('✅ 页面高度正常：' + totalHeight + 'px');
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

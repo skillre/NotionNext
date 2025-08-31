@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML渲染滚动问题测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        .html-render-container {
+            margin: 16px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .title-bar {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #495057;
+        }
+        .html-render-iframe {
+            width: 100%;
+            min-height: 200px;
+            border: none;
+            background: white;
+            border-radius: 0 0 8px 8px;
+        }
+        .footer-content {
+            margin-top: 50px;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-content">
+        <h1>HTML渲染滚动问题测试页面</h1>
+        
+        <p>这是一个测试页面，用于复现HTML渲染后页面无限滚动的问题。</p>
+        
+        <h2>测试HTML代码块</h2>
+        <div class="code-block"><!-- render:true -->
+&lt;div style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); padding: 20px; border-radius: 10px; color: white; text-align: center;"&gt;
+    &lt;h3&gt;这是一个渐变背景的测试容器&lt;/h3&gt;
+    &lt;p&gt;包含一些内容来测试高度计算&lt;/p&gt;
+    &lt;button onclick="alert('按钮点击测试')"&gt;点击测试&lt;/button&gt;
+&lt;/div&gt;</div>
+
+        <!-- 模拟渲染后的容器 -->
+        <div class="html-render-container">
+            <div class="title-bar">🔍 HTML 渲染预览</div>
+            <iframe class="html-render-iframe" id="testIframe"></iframe>
+        </div>
+
+        <h2>页面尾部内容</h2>
+        <p>这是页面的尾部内容。如果出现无限滚动问题，这部分内容将很难被用户看到。</p>
+        
+        <div class="footer-content">
+            <h3>页面底部</h3>
+            <p>这应该是页面的真正底部，用户应该能够正常滚动到这里。</p>
+            <p>如果出现无限滚动问题，这个区域将被额外的空白区域覆盖。</p>
+        </div>
+    </div>
+
+    <script>
+        // 模拟当前的iframe高度调整逻辑
+        const iframe = document.getElementById('testIframe');
+        
+        // 创建测试HTML内容
+        const testHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body {
+                        margin: 8px;
+                        font-family: Arial, sans-serif;
+                    }
+                </style>
+            </head>
+            <body>
+                <div style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                    <h3>这是一个渐变背景的测试容器</h3>
+                    <p>包含一些内容来测试高度计算</p>
+                    <button onclick="alert('按钮点击测试')">点击测试</button>
+                </div>
+                <script>
+                    // 当前的高度调整逻辑（可能有问题）
+                    function adjustIframeHeight() {
+                        const height = Math.max(
+                            document.body.scrollHeight,
+                            document.body.offsetHeight,
+                            document.documentElement.clientHeight,
+                            document.documentElement.scrollHeight,
+                            document.documentElement.offsetHeight
+                        );
+                        
+                        console.log('计算的高度值:', {
+                            bodyScrollHeight: document.body.scrollHeight,
+                            bodyOffsetHeight: document.body.offsetHeight,
+                            htmlClientHeight: document.documentElement.clientHeight,
+                            htmlScrollHeight: document.documentElement.scrollHeight,
+                            htmlOffsetHeight: document.documentElement.offsetHeight,
+                            finalHeight: height
+                        });
+                        
+                        window.parent.postMessage({
+                            type: 'resize',
+                            height: height + 20
+                        }, '*');
+                    }
+                    
+                    setTimeout(adjustIframeHeight, 100);
+                    window.addEventListener('resize', adjustIframeHeight);
+                    
+                    const observer = new MutationObserver(adjustIframeHeight);
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true
+                    });
+                </script>
+            </body>
+            </html>
+        `;
+        
+        // 监听iframe消息
+        window.addEventListener('message', (event) => {
+            console.log('收到iframe消息:', event.data);
+            if (event.data && event.data.type === 'resize') {
+                console.log('设置iframe高度为:', event.data.height + 'px');
+                iframe.style.height = event.data.height + 'px';
+            }
+        });
+        
+        // 加载测试HTML
+        iframe.onload = () => {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(testHtml);
+            iframeDoc.close();
+        };
+        
+        // 检查页面滚动行为
+        let lastScrollTop = 0;
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = document.documentElement.clientHeight;
+            const maxScroll = scrollHeight - clientHeight;
+            
+            console.log('滚动状态:', {
+                scrollTop: scrollTop,
+                scrollHeight: scrollHeight,
+                clientHeight: clientHeight,
+                maxScroll: maxScroll,
+                percentScrolled: ((scrollTop / maxScroll) * 100).toFixed(2) + '%'
+            });
+            
+            if (scrollTop > maxScroll + 100) {
+                console.warn('⚠️ 检测到异常滚动：滚动位置超过了正常的最大滚动值！');
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+    </script>
+</body>
+</html>
