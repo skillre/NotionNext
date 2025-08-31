@@ -98,6 +98,59 @@
   .html-render-container .direct-render {
     padding: 12px;
   }
+  
+  .html-render-container iframe {
+    min-height: 180px;
+  }
+}
+
+/* 手机设备适配 */
+@media (max-width: 480px) {
+  .html-render-container {
+    margin: 8px 0;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .html-render-container:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .html-render-container .title-bar {
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  
+  .html-render-container .direct-render {
+    padding: 10px;
+  }
+  
+  .html-render-container iframe {
+    min-height: 150px;
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 320px) {
+  .html-render-container {
+    margin: 6px 0;
+    border-radius: 3px;
+  }
+  
+  .html-render-container .title-bar {
+    padding: 6px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  
+  .html-render-container .direct-render {
+    padding: 8px;
+  }
+  
+  .html-render-container iframe {
+    min-height: 120px;
+  }
 }
 
 /* 动画效果 */

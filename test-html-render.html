@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML渲染功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .test-header {
+            background: #f5f5f5;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        .test-content {
+            padding: 15px;
+        }
+        .html-code {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTML渲染功能测试页面</h1>
+    
+    <div class="test-section">
+        <div class="test-header">测试说明</div>
+        <div class="test-content">
+            <p>本页面用于测试HTML渲染功能的修复效果：</p>
+            <ul>
+                <li><strong>重复渲染测试</strong>：确保同一HTML代码块不会出现多个渲染结果</li>
+                <li><strong>移动端显示测试</strong>：在移动设备上查看是否正常显示，无横向滚动</li>
+                <li><strong>响应式测试</strong>：测试不同屏幕尺寸下的显示效果</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-header">测试用例1：简单HTML渲染</div>
+        <div class="test-content">
+            <p>以下HTML代码应该被渲染（包含 <code>&lt;!-- render:true --&gt;</code> 标记）：</p>
+            <div class="html-code">
+<!-- render:true -->
+&lt;div style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); padding: 20px; border-radius: 10px; color: white; text-align: center;"&gt;
+    &lt;h2&gt;欢迎使用 HTML 渲染功能！&lt;/h2&gt;
+    &lt;p&gt;这是一个测试渲染的例子&lt;/p&gt;
+&lt;/div&gt;
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-header">测试用例2：移动端优化测试</div>
+        <div class="test-content">
+            <p>以下HTML包含表格和长文本，测试移动端适配：</p>
+            <div class="html-code">
+<!-- render:true -->
+&lt;div style="padding: 15px; border: 2px solid #3498db; border-radius: 8px;"&gt;
+    &lt;h3&gt;移动端适配测试&lt;/h3&gt;
+    &lt;table style="width: 100%; border-collapse: collapse; margin: 10px 0;"&gt;
+        &lt;tr&gt;
+            &lt;th style="border: 1px solid #ddd; padding: 8px; background: #f2f2f2;"&gt;列1&lt;/th&gt;
+            &lt;th style="border: 1px solid #ddd; padding: 8px; background: #f2f2f2;"&gt;列2&lt;/th&gt;
+            &lt;th style="border: 1px solid #ddd; padding: 8px; background: #f2f2f2;"&gt;列3&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="border: 1px solid #ddd; padding: 8px;"&gt;数据1&lt;/td&gt;
+            &lt;td style="border: 1px solid #ddd; padding: 8px;"&gt;数据2&lt;/td&gt;
+            &lt;td style="border: 1px solid #ddd; padding: 8px;"&gt;数据3&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+    &lt;p&gt;这是一段很长的文本用于测试移动端的文字换行效果，确保在小屏幕设备上能够正常显示，不会出现横向滚动条。&lt;/p&gt;
+&lt;/div&gt;
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-header">测试用例3：不渲染测试</div>
+        <div class="test-content">
+            <p>以下HTML代码不应该被渲染（包含 <code>&lt;!-- render:false --&gt;</code> 标记）：</p>
+            <div class="html-code">
+<!-- render:false -->
+&lt;div style="background: red; color: white; padding: 20px;"&gt;
+    &lt;h2&gt;这个不应该被渲染&lt;/h2&gt;
+&lt;/div&gt;
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-header">修复效果检查清单</div>
+        <div class="test-content">
+            <h4>重复渲染问题检查：</h4>
+            <ul>
+                <li>✅ 每个HTML代码块只应该出现一个渲染结果</li>
+                <li>✅ 页面刷新后不应该出现重复的渲染容器</li>
+                <li>✅ 主题切换时不应该产生新的重复渲染</li>
+            </ul>
+            
+            <h4>移动端显示问题检查：</h4>
+            <ul>
+                <li>✅ 在手机设备上查看时应该没有横向滚动条</li>
+                <li>✅ 表格和长文本应该正确换行和适配</li>
+                <li>✅ 渲染容器的标题栏和内容在小屏幕上显示正常</li>
+            </ul>
+            
+            <h4>测试步骤：</h4>
+            <ol>
+                <li>在桌面浏览器中查看渲染效果</li>
+                <li>使用浏览器开发者工具模拟移动设备</li>
+                <li>切换不同的设备尺寸（iPhone SE, iPad等）</li>
+                <li>刷新页面多次，确认无重复渲染</li>
+                <li>切换暗黑模式，确认功能正常</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-header">技术改进总结</div>
+        <div class="test-content">
+            <h4>修复的问题：</h4>
+            <ul>
+                <li><strong>重复渲染问题</strong>：通过数据属性标记和严格的重复检查机制解决</li>
+                <li><strong>移动端显示问题</strong>：通过优化iframe内样式和响应式设计解决</li>
+            </ul>
+            
+            <h4>新增功能：</h4>
+            <ul>
+                <li>防重复渲染机制：使用 <code>data-html-rendered</code> 属性标记</li>
+                <li>移动端优化样式：包含多个响应式断点</li>
+                <li>动态高度调整：iframe内容自适应高度</li>
+                <li>安全沙盒模式：防止恶意代码影响主页面</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

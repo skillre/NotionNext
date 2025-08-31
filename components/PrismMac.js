@@ -298,6 +298,11 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
   const htmlCodeBlocks = container.querySelectorAll('code.language-html')
   
   htmlCodeBlocks.forEach(codeElement => {
+    // 严格的重复渲染检查
+    if (isAlreadyRendered(codeElement)) {
+      return
+    }
+    
     const codeContent = codeElement.textContent || ''
     
     // 检查是否包含渲染开关（在代码块的最前面）
@@ -321,11 +326,10 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
       return
     }
     
-    // 检查是否已经渲染过
+    // 标记该元素已被处理
+    codeElement.setAttribute('data-html-rendered', 'true')
+    
     const parentElement = codeElement.closest('.code-toolbar') || codeElement.closest('pre')
-    if (!parentElement || parentElement.querySelector('.html-render-container')) {
-      return
-    }
     
     // 根据配置决定是否隐藏原始代码
     if (hideCode) {
@@ -363,24 +367,8 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
             <html>
             <head>
               <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                /* 重置样式，避免外部样式干扰 */
-                * {
-                  box-sizing: border-box;
-                }
-                body {
-                  margin: 8px;
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                  line-height: 1.6;
-                  color: #333;
-                }
-                /* 防止内容溢出 */
-                html, body {
-                  overflow-x: auto;
-                  word-wrap: break-word;
-                }
-              </style>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+              ${generateMobileOptimizedStyle()}
             </head>
             <body>
               ${cleanedCode}
@@ -452,6 +440,165 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
     // 将渲染容器插入到代码块后面
     parentElement.parentNode.insertBefore(renderContainer, parentElement.nextSibling)
   })
+}
+
+/**
+ * 检查代码元素是否已被渲染
+ * @param {Element} codeElement 代码元素
+ * @returns {boolean} 是否已渲染
+ */
+const isAlreadyRendered = (codeElement) => {
+  // 检查数据属性标记
+  if (codeElement.getAttribute('data-html-rendered') === 'true') {
+    return true
+  }
+  
+  // 检查父级容器中的渲染结果
+  const parentElement = codeElement.closest('.code-toolbar') || codeElement.closest('pre')
+  if (!parentElement) return false
+  
+  // 检查父级容器的同级元素中是否已存在渲染容器
+  const parentNode = parentElement.parentNode
+  if (parentNode) {
+    const existingContainer = parentNode.querySelector('.html-render-container')
+    if (existingContainer) {
+      return true
+    }
+  }
+  
+  return false
+}
+
+/**
+ * 生成移动端优化样式
+ * @returns {string} CSS样式字符串
+ */
+const generateMobileOptimizedStyle = () => {
+  return `
+    <style>
+      /* 重置样式，避免外部样式干扰 */
+      * {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+      
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        word-wrap: break-word;
+        word-break: break-word;
+        contain: layout style paint;
+      }
+      
+      body {
+        margin: 8px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        font-size: 16px;
+      }
+      
+      /* 防止各种元素溢出 */
+      table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        overflow-x: auto;
+        display: block;
+        white-space: nowrap;
+      }
+      
+      img, video, iframe, canvas, svg {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+      
+      pre, code {
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-width: 100%;
+      }
+      
+      /* 响应式断点 - 平板适配 */
+      @media (max-width: 768px) {
+        body {
+          margin: 6px;
+          font-size: 15px;
+          line-height: 1.5;
+        }
+        
+        h1 { font-size: 1.6em; margin: 0.8em 0; }
+        h2 { font-size: 1.4em; margin: 0.7em 0; }
+        h3 { font-size: 1.2em; margin: 0.6em 0; }
+        h4, h5, h6 { font-size: 1.1em; margin: 0.5em 0; }
+        
+        table {
+          font-size: 14px;
+        }
+      }
+      
+      /* 响应式断点 - 手机适配 */
+      @media (max-width: 480px) {
+        body {
+          margin: 4px;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+        
+        h1 { font-size: 1.4em; }
+        h2 { font-size: 1.2em; }
+        h3 { font-size: 1.1em; }
+        h4, h5, h6 { font-size: 1em; }
+        
+        table {
+          font-size: 12px;
+        }
+        
+        /* 优化触摸交互 */
+        button, input, select, textarea {
+          font-size: 16px; /* 防止iOS缩放 */
+        }
+      }
+      
+      /* 响应式断点 - 超小屏幕适配 */
+      @media (max-width: 320px) {
+        body {
+          margin: 2px;
+          font-size: 13px;
+        }
+        
+        h1 { font-size: 1.3em; }
+        h2 { font-size: 1.1em; }
+        h3, h4, h5, h6 { font-size: 1em; }
+        
+        table {
+          font-size: 11px;
+        }
+      }
+      
+      /* 滚动条优化 */
+      ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 2px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.4);
+      }
+    </style>
+  `
 }
 
 export default PrismMac
