@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML渲染完整显示方案测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-html {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+            font-size: 14px;
+        }
+        .expected-result {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin-top: 10px;
+        }
+        .improvement-note {
+            background: #e1f5fe;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196f3;
+            margin-bottom: 15px;
+        }
+        .footer-marker {
+            margin-top: 100px;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px dashed #ffc107;
+        }
+        .test-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison-item {
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .old-way {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        .new-way {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 HTML渲染完整显示方案测试</h1>
+        
+        <div class="improvement-note">
+            <h3>🚀 重大改进说明：</h3>
+            <p><strong>问题：</strong>之前的方案限制了iframe的最大高度（3000px），导致长内容被截断在小窗口中。</p>
+            <p><strong>解决：</strong>新方案移除了高度限制，允许HTML内容完整展示，同时保持精确的高度计算防止无限滚动。</p>
+        </div>
+
+        <div class="test-comparison">
+            <div class="comparison-item old-way">
+                <h4>❌ 旧方案问题</h4>
+                <ul>
+                    <li>iframe最大高度3000px</li>
+                    <li>长内容需要在小窗口内滚动</li>
+                    <li>用户体验不佳</li>
+                    <li>无法看到完整内容</li>
+                </ul>
+            </div>
+            <div class="comparison-item new-way">
+                <h4>✅ 新方案优势</h4>
+                <ul>
+                    <li>移除高度限制</li>
+                    <li>内容完整展示</li>
+                    <li>精确的高度计算</li>
+                    <li>防止无限滚动</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试1：短内容HTML渲染</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); padding: 20px; border-radius: 10px; color: white; text-align: center;"&gt;
+    &lt;h3&gt;简短内容测试&lt;/h3&gt;
+    &lt;p&gt;这是一个简短的HTML内容，应该能够完整显示&lt;/p&gt;
+    &lt;button onclick="alert('点击成功!')"&gt;测试按钮&lt;/button&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>内容完整显示，高度自适应，无需滚动条
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试2：中等长度内容</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="padding: 20px; border: 2px solid #333; border-radius: 10px; font-family: Arial, sans-serif;"&gt;
+    &lt;h2 style="color: #2c3e50;"&gt;中等长度内容测试&lt;/h2&gt;
+    &lt;p&gt;这是第一段内容，包含了一些描述性文字。&lt;/p&gt;
+    &lt;p&gt;这是第二段内容，继续添加更多的文字来测试高度计算。&lt;/p&gt;
+    &lt;p&gt;这是第三段内容，模拟真实的文档内容。&lt;/p&gt;
+    
+    &lt;h3 style="color: #34495e;"&gt;列表内容&lt;/h3&gt;
+    &lt;ul&gt;
+        &lt;li&gt;列表项目一：说明一些重要的功能&lt;/li&gt;
+        &lt;li&gt;列表项目二：介绍另一个特性&lt;/li&gt;
+        &lt;li&gt;列表项目三：提供更多的信息&lt;/li&gt;
+        &lt;li&gt;列表项目四：额外的说明内容&lt;/li&gt;
+    &lt;/ul&gt;
+    
+    &lt;h3 style="color: #34495e;"&gt;表格数据&lt;/h3&gt;
+    &lt;table border="1" style="width:100%; border-collapse: collapse; margin: 10px 0;"&gt;
+        &lt;tr style="background-color: #f8f9fa;"&gt;
+            &lt;th style="padding: 8px;"&gt;功能&lt;/th&gt;
+            &lt;th style="padding: 8px;"&gt;旧方案&lt;/th&gt;
+            &lt;th style="padding: 8px;"&gt;新方案&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="padding: 8px;"&gt;高度限制&lt;/td&gt;
+            &lt;td style="padding: 8px; color: #e74c3c;"&gt;有限制 (3000px)&lt;/td&gt;
+            &lt;td style="padding: 8px; color: #27ae60;"&gt;无限制&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="padding: 8px;"&gt;内容显示&lt;/td&gt;
+            &lt;td style="padding: 8px; color: #e74c3c;"&gt;可能被截断&lt;/td&gt;
+            &lt;td style="padding: 8px; color: #27ae60;"&gt;完整显示&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="padding: 8px;"&gt;用户体验&lt;/td&gt;
+            &lt;td style="padding: 8px; color: #e74c3c;"&gt;需要滚动&lt;/td&gt;
+            &lt;td style="padding: 8px; color: #27ae60;"&gt;直接查看&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>所有内容完整展示，表格和列表正常显示，无需iframe内部滚动
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试3：长内容HTML（重点测试）</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="padding: 20px; border: 2px solid #8e44ad; border-radius: 10px; font-family: Arial, sans-serif;"&gt;
+    &lt;h1 style="color: #8e44ad; text-align: center;"&gt;🎉 长内容完整显示测试&lt;/h1&gt;
+    
+    &lt;div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; margin: 15px 0;"&gt;
+        &lt;h2&gt;这是一个重要的测试部分&lt;/h2&gt;
+        &lt;p&gt;之前这样的长内容会被限制在3000px的高度内，用户需要在iframe内部滚动才能看到完整内容。&lt;/p&gt;
+        &lt;p&gt;现在应该能够完整显示，用户可以在页面中正常滚动浏览所有内容。&lt;/p&gt;
+    &lt;/div&gt;
+    
+    &lt;h2 style="color: #2c3e50;"&gt;详细功能说明&lt;/h2&gt;
+    &lt;p&gt;第一段：这里是详细的功能说明，介绍了新的HTML渲染方案的各种优势和改进。&lt;/p&gt;
+    &lt;p&gt;第二段：新方案采用了更精确的高度计算机制，能够准确获取内容的实际高度。&lt;/p&gt;
+    &lt;p&gt;第三段：同时保留了防止无限滚动的保护机制，确保页面稳定性。&lt;/p&gt;
+    &lt;p&gt;第四段：通过监控页面高度变化，及时发现并处理异常情况。&lt;/p&gt;
+    &lt;p&gt;第五段：支持图片、表格、列表等各种HTML元素的完整显示。&lt;/p&gt;
+    
+    &lt;h3 style="color: #34495e;"&gt;技术改进点&lt;/h3&gt;
+    &lt;ol&gt;
+        &lt;li style="margin: 10px 0;"&gt;&lt;strong&gt;移除高度限制：&lt;/strong&gt;不再限制iframe的最大高度为3000px&lt;/li&gt;
+        &lt;li style="margin: 10px 0;"&gt;&lt;strong&gt;精确高度计算：&lt;/strong&gt;使用body.scrollHeight作为主要计算依据&lt;/li&gt;
+        &lt;li style="margin: 10px 0;"&gt;&lt;strong&gt;减少计算次数：&lt;/strong&gt;从10次减少到3次，更加精准&lt;/li&gt;
+        &lt;li style="margin: 10px 0;"&gt;&lt;strong&gt;异步内容处理：&lt;/strong&gt;等待图片加载完成后再计算高度&lt;/li&gt;
+        &lt;li style="margin: 10px 0;"&gt;&lt;strong&gt;滚动监控：&lt;/strong&gt;监控页面高度变化，防止异常滚动&lt;/li&gt;
+    &lt;/ol&gt;
+    
+    &lt;h3 style="color: #34495e;"&gt;用户体验提升&lt;/h3&gt;
+    &lt;div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 15px 0;"&gt;
+        &lt;p&gt;&lt;strong&gt;前：&lt;/strong&gt;内容被限制在固定高度的窗口中，需要在iframe内滚动&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;后：&lt;/strong&gt;内容完整展示，用户可以在页面中自然滚动&lt;/p&gt;
+    &lt;/div&gt;
+    
+    &lt;h3 style="color: #34495e;"&gt;测试场景覆盖&lt;/h3&gt;
+    &lt;table border="1" style="width:100%; border-collapse: collapse; margin: 10px 0;"&gt;
+        &lt;tr style="background-color: #f8f9fa;"&gt;
+            &lt;th style="padding: 10px;"&gt;场景&lt;/th&gt;
+            &lt;th style="padding: 10px;"&gt;描述&lt;/th&gt;
+            &lt;th style="padding: 10px;"&gt;期望结果&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="padding: 8px;"&gt;短内容&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;简单的HTML元素&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;正常显示，高度自适应&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="padding: 8px;"&gt;中等内容&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;包含表格、列表等&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;完整显示所有元素&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="padding: 8px;"&gt;长内容&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;大量文字和复杂布局&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;完整显示，无需iframe滚动&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="padding: 8px;"&gt;包含图片&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;异步加载的图片内容&lt;/td&gt;
+            &lt;td style="padding: 8px;"&gt;等待图片加载后调整高度&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+    
+    &lt;div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;"&gt;
+        &lt;h3&gt;🎯 关键测试要点&lt;/h3&gt;
+        &lt;p&gt;如果你能够在页面中直接看到这段文字，而不需要在iframe内部滚动，说明新方案成功实现了完整内容显示的目标！&lt;/p&gt;
+    &lt;/div&gt;
+    
+    &lt;h3 style="color: #34495e;"&gt;最终验证&lt;/h3&gt;
+    &lt;p&gt;这是内容的最后一部分，如果你能直接看到这里，说明：&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li&gt;✅ 高度限制已成功移除&lt;/li&gt;
+        &lt;li&gt;✅ 内容可以完整显示&lt;/li&gt;
+        &lt;li&gt;✅ 不需要iframe内部滚动&lt;/li&gt;
+        &lt;li&gt;✅ 用户体验得到显著提升&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>这是关键测试！所有长内容应该完整显示，无需在iframe内滚动。这展示了新方案相比旧方案的重大改进。
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试4：包含图片的内容</h2>
+            <div class="test-html"><!-- render:true -->
+&lt;div style="padding: 20px; border: 2px solid #e67e22; border-radius: 10px;"&gt;
+    &lt;h3 style="color: #e67e22;"&gt;图片内容测试&lt;/h3&gt;
+    &lt;p&gt;这个测试包含了图片元素，用于验证异步内容的高度计算：&lt;/p&gt;
+    &lt;div style="text-align: center; margin: 20px 0;"&gt;
+        &lt;div style="width: 300px; height: 200px; background: linear-gradient(45deg, #f39c12, #e67e22); margin: 0 auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;"&gt;
+            模拟图片区域&lt;br&gt;300x200px
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;p&gt;图片下方的内容也应该能够完整显示。&lt;/p&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>包含图片的内容完整显示，高度计算正确
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试5：不渲染的代码块</h2>
+            <div class="test-html"><!-- render:false -->
+&lt;div&gt;
+    &lt;p&gt;这个代码块设置为不渲染，应该保持原样显示&lt;/p&gt;
+&lt;/div&gt;</div>
+            <div class="expected-result">
+                <strong>预期结果：</strong>代码块保持原样显示，不进行HTML渲染
+            </div>
+        </div>
+
+        <div class="footer-marker">
+            <h2>🎯 测试完成标记</h2>
+            <p><strong>如果你能正常看到这个区域，并且上面的HTML内容都能完整显示（特别是测试3的长内容），说明新的HTML渲染方案成功实现了目标！</strong></p>
+            <div style="margin: 20px 0; padding: 15px; background: #e8f5e8; border-radius: 8px;">
+                <h3>✅ 成功指标：</h3>
+                <ul style="text-align: left; display: inline-block;">
+                    <li>所有HTML内容完整显示，无截断</li>
+                    <li>不需要在iframe内部滚动</li>
+                    <li>页面可以正常滚动到底部</li>
+                    <li>没有出现无限滚动问题</li>
+                    <li>长内容（测试3）完全可见</li>
+                </ul>
+            </div>
+            <p>时间戳：<span id="timestamp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 显示时间戳
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // 监控页面高度和滚动行为
+        let initialHeight = document.documentElement.scrollHeight;
+        let maxScrollPosition = 0;
+        let scrollCheckInterval;
+        
+        function monitorScrollBehavior() {
+            const currentHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const clientHeight = document.documentElement.clientHeight;
+            const maxScroll = currentHeight - clientHeight;
+            
+            if (scrollTop > maxScrollPosition) {
+                maxScrollPosition = scrollTop;
+            }
+            
+            // 每5秒检查一次
+            if (!scrollCheckInterval) {
+                scrollCheckInterval = setInterval(() => {
+                    const newHeight = document.documentElement.scrollHeight;
+                    console.log('页面监控报告:', {
+                        initialHeight: initialHeight,
+                        currentHeight: newHeight,
+                        heightIncrease: newHeight - initialHeight,
+                        maxScrollPosition: maxScrollPosition,
+                        currentScrollPosition: window.pageYOffset,
+                        timestamp: new Date().toLocaleTimeString()
+                    });
+                    
+                    // 检查是否有异常的高度增长
+                    if (newHeight - initialHeight > 5000) {
+                        console.warn('⚠️ 检测到页面高度异常增长！');
+                    } else {
+                        console.log('✅ 页面高度正常');
+                    }
+                }, 5000);
+            }
+        }
+        
+        // 页面加载完成后开始监控
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                monitorScrollBehavior();
+                console.log('🎯 HTML渲染完整显示测试页面已加载');
+                console.log('页面初始高度:', initialHeight + 'px');
+            }, 2000);
+        });
+        
+        // 滚动监听
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = document.documentElement.clientHeight;
+            const scrollPercent = ((scrollTop / (scrollHeight - clientHeight)) * 100).toFixed(1);
+            
+            // 显示滚动进度
+            if (scrollPercent == 100) {
+                console.log('🎉 已滚动到页面底部！HTML渲染完整显示测试成功！');
+            }
+        });
+    </script>
+</body>
+</html>

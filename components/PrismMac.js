@@ -373,129 +373,173 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
             <body>
               ${cleanedCode}
               <script>
-                // 防止重复调整的标识
-                let isAdjusting = false;
-                let adjustmentCount = 0;
-                const MAX_ADJUSTMENTS = 10; // 最大调整次数限制
+                // 精确的高度计算机制，确保内容完整展示
+                let isCalculating = false;
+                let calculationAttempts = 0;
+                const MAX_CALCULATION_ATTEMPTS = 3; // 减少计算次数，更加精确
+                let lastCalculatedHeight = 0;
                 
-                // 改进的iframe高度计算逻辑
-                function adjustIframeHeight() {
-                  // 防止重复调整和过度调整
-                  if (isAdjusting || adjustmentCount >= MAX_ADJUSTMENTS) {
+                // 改进的高度计算函数，不再限制最大高度
+                function calculateAccurateHeight() {
+                  if (isCalculating || calculationAttempts >= MAX_CALCULATION_ATTEMPTS) {
                     return;
                   }
                   
-                  isAdjusting = true;
-                  adjustmentCount++;
+                  isCalculating = true;
+                  calculationAttempts++;
                   
                   try {
-                    const body = document.body;
-                    const html = document.documentElement;
-                    
-                    // 获取多种高度计算方法
-                    const heights = [
-                      body.scrollHeight,
-                      body.offsetHeight,
-                      html.clientHeight,
-                      html.scrollHeight,
-                      html.offsetHeight
-                    ];
-                    
-                    // 过滤无效值和异常值
-                    const validHeights = heights.filter(h => 
-                      typeof h === 'number' && 
-                      h > 0 && 
-                      h < 5000 && // 设置合理的上限
-                      !isNaN(h)
-                    );
-                    
-                    if (validHeights.length === 0) {
-                      console.warn('HTML渲染: 无法获取有效的高度值');
-                      isAdjusting = false;
-                      return;
-                    }
-                    
-                    // 取最小的合理值而不是最大值，避免异常大的高度
-                    const calculatedHeight = Math.min(...validHeights);
-                    
-                    // 设置合理的边界值
-                    const minHeight = 50;  // 最小高度
-                    const maxHeight = 3000; // 最大高度限制
-                    const finalHeight = Math.max(minHeight, Math.min(calculatedHeight, maxHeight));
-                    
-                    // 添加调试日志
-                    console.log('HTML渲染高度计算:', {
-                      原始高度值: heights,
-                      有效高度值: validHeights,
-                      计算高度: calculatedHeight,
-                      最终高度: finalHeight,
-                      调整次数: adjustmentCount
-                    });
-                    
-                    // 防抖处理，避免频繁发送消息
+                    // 等待DOM完全渲染
                     setTimeout(() => {
-                      window.parent.postMessage({
-                        type: 'htmlRenderResize', // 使用特殊的消息类型
-                        height: finalHeight + 30, // 适当的边距
-                        iframeId: window.frameElement?.id || 'unknown',
-                        timestamp: Date.now()
-                      }, '*');
-                      isAdjusting = false;
-                    }, 150);
+                      const body = document.body;
+                      const html = document.documentElement;
+                      
+                      // 强制浏览器重新计算布局
+                      body.offsetHeight;
+                      
+                      // 获取实际内容高度
+                      const contentHeight = body.scrollHeight;
+                      
+                      // 优先使用body的scrollHeight，这通常最准确
+                      let finalHeight = contentHeight;
+                      
+                      // 如果内容高度似乎不合理，使用备用方法
+                      if (!finalHeight || finalHeight < 20) {
+                        finalHeight = Math.max(
+                          body.offsetHeight,
+                          body.clientHeight,
+                          50 // 最小高度
+                        );
+                      }
+                      
+                      // 添加少量边距以确保内容完整显示
+                      finalHeight += 20;
+                      
+                      // 只有当高度发生显著变化时才更新
+                      const heightDifference = Math.abs(finalHeight - lastCalculatedHeight);
+                      if (heightDifference > 10 || lastCalculatedHeight === 0) {
+                        lastCalculatedHeight = finalHeight;
+                        
+                        console.log('HTML渲染高度计算 (精确模式):', {
+                          contentHeight: contentHeight,
+                          finalHeight: finalHeight,
+                          calculationAttempts: calculationAttempts,
+                          heightDifference: heightDifference
+                        });
+                        
+                        // 发送高度信息
+                        window.parent.postMessage({
+                          type: 'htmlRenderAccurateResize', // 新的消息类型
+                          height: finalHeight,
+                          iframeId: window.frameElement?.id || 'html-render',
+                          timestamp: Date.now(),
+                          calculationAttempt: calculationAttempts
+                        }, '*');
+                      }
+                      
+                      isCalculating = false;
+                    }, 50); // 短暂延迟确保DOM完成
                     
                   } catch (error) {
-                    console.error('HTML渲染高度调整错误:', error);
-                    isAdjusting = false;
+                    console.error('HTML渲染高度计算错误:', error);
+                    isCalculating = false;
                     
                     // 发送默认高度
                     window.parent.postMessage({
-                      type: 'htmlRenderResize',
-                      height: 300, // 默认高度
-                      iframeId: window.frameElement?.id || 'unknown',
+                      type: 'htmlRenderAccurateResize',
+                      height: 300,
+                      iframeId: window.frameElement?.id || 'html-render',
                       timestamp: Date.now(),
                       error: true
                     }, '*');
                   }
                 }
                 
-                // 延迟初始调整，确保DOM完全加载
-                setTimeout(() => {
-                  adjustIframeHeight();
+                // 初始化高度计算
+                function initializeHeightCalculation() {
+                  // 等待所有资源加载完成
+                  if (document.readyState === 'complete') {
+                    setTimeout(calculateAccurateHeight, 100);
+                  } else {
+                    window.addEventListener('load', () => {
+                      setTimeout(calculateAccurateHeight, 100);
+                    });
+                  }
                   
-                  // 第二次调整，处理异步内容
-                  setTimeout(adjustIframeHeight, 500);
-                }, 200);
+                  // 处理异步内容（如图片加载）
+                  const images = document.querySelectorAll('img');
+                  let loadedImages = 0;
+                  const totalImages = images.length;
+                  
+                  if (totalImages > 0) {
+                    images.forEach(img => {
+                      if (img.complete) {
+                        loadedImages++;
+                      } else {
+                        img.onload = img.onerror = () => {
+                          loadedImages++;
+                          if (loadedImages === totalImages) {
+                            setTimeout(calculateAccurateHeight, 100);
+                          }
+                        };
+                      }
+                    });
+                    
+                    if (loadedImages === totalImages) {
+                      setTimeout(calculateAccurateHeight, 100);
+                    }
+                  }
+                }
                 
-                // 监听窗口大小变化（带防抖）
-                let resizeTimer = null;
+                // 启动高度计算
+                initializeHeightCalculation();
+                
+                // 精简的窗口大小变化监听
+                let resizeTimeout;
                 window.addEventListener('resize', () => {
-                  clearTimeout(resizeTimer);
-                  resizeTimer = setTimeout(adjustIframeHeight, 300);
+                  clearTimeout(resizeTimeout);
+                  resizeTimeout = setTimeout(() => {
+                    if (calculationAttempts < MAX_CALCULATION_ATTEMPTS) {
+                      isCalculating = false;
+                      calculateAccurateHeight();
+                    }
+                  }, 300);
                 });
                 
-                // 监听DOM变化（更精确的监听）
-                const observer = new MutationObserver((mutations) => {
-                  // 只在有意义的变化时调整高度
-                  const hasSignificantChange = mutations.some(mutation => 
-                    mutation.type === 'childList' && 
-                    (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)
-                  );
+                // 限制性的DOM变化监听
+                const domObserver = new MutationObserver((mutations) => {
+                  // 只在有重要变化时触发
+                  const hasImportantChange = mutations.some(mutation => {
+                    return mutation.type === 'childList' && 
+                           mutation.addedNodes.length > 0 &&
+                           Array.from(mutation.addedNodes).some(node => 
+                             node.nodeType === 1 && // 元素节点
+                             (node.tagName === 'IMG' || 
+                              node.tagName === 'DIV' || 
+                              node.tagName === 'TABLE' ||
+                              node.offsetHeight > 20)
+                           );
+                  });
                   
-                  if (hasSignificantChange && adjustmentCount < MAX_ADJUSTMENTS) {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(adjustIframeHeight, 200);
+                  if (hasImportantChange && calculationAttempts < MAX_CALCULATION_ATTEMPTS) {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                      isCalculating = false;
+                      calculateAccurateHeight();
+                    }, 200);
                   }
                 });
                 
-                observer.observe(document.body, {
+                // 启动DOM监听
+                domObserver.observe(document.body, {
                   childList: true,
                   subtree: true
                 });
                 
-                // 页面卸载时清理
+                // 清理资源
                 window.addEventListener('beforeunload', () => {
-                  observer.disconnect();
-                  clearTimeout(resizeTimer);
+                  domObserver.disconnect();
+                  clearTimeout(resizeTimeout);
                 });
               </script>
             </body>
@@ -523,16 +567,16 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
       
       if (!window.htmlRenderMessageHandlerAdded) {
         messageHandler = (event) => {
-          // 验证消息来源和格式
+          // 验证消息来源和格式 - 支持新的消息类型
           if (!event.data || 
-              event.data.type !== 'htmlRenderResize' || 
+              (event.data.type !== 'htmlRenderResize' && event.data.type !== 'htmlRenderAccurateResize') || 
               typeof event.data.height !== 'number') {
             return;
           }
           
-          // 验证高度值的合理性
+          // 验证高度值的合理性（移除上限限制）
           const height = event.data.height;
-          if (height <= 0 || height > 5000 || isNaN(height)) {
+          if (height <= 0 || isNaN(height)) {
             console.warn('HTML渲染: 接收到异常的高度值', height);
             return;
           }
@@ -543,10 +587,11 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
               targetIframe.classList.contains('html-render-iframe')) {
             
             // 记录高度调整日志
-            console.log('HTML渲染: 调整iframe高度', {
+            console.log('HTML渲染: 调整iframe高度 (完整显示模式)', {
               iframeId: event.data.iframeId,
               oldHeight: targetIframe.style.height,
               newHeight: height + 'px',
+              messageType: event.data.type,
               timestamp: event.data.timestamp
             });
             
@@ -581,7 +626,59 @@ const renderHtmlCode = (useSandbox = true, hideCode = true) => {
     
     // 将渲染容器插入到代码块后面
     parentElement.parentNode.insertBefore(renderContainer, parentElement.nextSibling)
+    
+    // 添加页面滚动行为监控
+    setTimeout(() => {
+      addScrollBehaviorMonitoring(renderContainer);
+    }, 1000);
   })
+}
+
+/**
+ * 添加页面滚动行为监控，防止无限滚动问题
+ * @param {Element} renderContainer 渲染容器元素
+ */
+function addScrollBehaviorMonitoring(renderContainer) {
+  let lastPageHeight = document.documentElement.scrollHeight;
+  let heightCheckCount = 0;
+  const MAX_HEIGHT_CHECKS = 10;
+  
+  const heightMonitor = setInterval(() => {
+    const currentPageHeight = document.documentElement.scrollHeight;
+    const heightIncrease = currentPageHeight - lastPageHeight;
+    
+    // 如果页面高度异常增长
+    if (heightIncrease > 2000 && heightCheckCount < MAX_HEIGHT_CHECKS) {
+      console.warn('HTML渲染: 检测到页面高度异常增长', {
+        oldHeight: lastPageHeight,
+        newHeight: currentPageHeight,
+        increase: heightIncrease
+      });
+      
+      // 尝试限制iframe高度
+      const iframe = renderContainer.querySelector('.html-render-iframe');
+      if (iframe) {
+        const currentIframeHeight = parseInt(iframe.style.height) || 0;
+        if (currentIframeHeight > 3000) {
+          console.log('HTML渲染: 强制限制iframe高度到合理范围');
+          iframe.style.height = '3000px';
+        }
+      }
+    }
+    
+    lastPageHeight = currentPageHeight;
+    heightCheckCount++;
+    
+    // 10次检查后停止监控
+    if (heightCheckCount >= MAX_HEIGHT_CHECKS) {
+      clearInterval(heightMonitor);
+    }
+  }, 1000);
+  
+  // 5分钟后自动清理监控
+  setTimeout(() => {
+    clearInterval(heightMonitor);
+  }, 300000);
 }
 
 /**
@@ -631,9 +728,9 @@ const generateMobileOptimizedStyle = () => {
         word-wrap: break-word;
         word-break: break-word;
         contain: layout style paint;
-        /* 限制最大高度，防止异常高度 */
-        max-height: 3000px;
+        /* 移除最大高度限制，但保持合理的高度控制 */
         height: auto;
+        min-height: 20px;
       }
       
       body {
